@@ -1,0 +1,28 @@
+<Patient>
+	<meta>
+		<profile value="https://fhir.nhs.uk/STU3/StructureDefinition/CareConnect-Patient-1"/>
+	</meta>
+	<identifier>
+		<extension url="https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-NHSNumberVerificationStatus-1">
+			<valueCodeableConcept>
+			<coding>
+			<system value="https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-NHSNumberVerificationStatus-1"/>
+			<code value="01"/>
+			<display value="Number present and verified"/>
+			</coding>
+			</valueCodeableConcept>
+		</extension>
+			<system value="https://fhir.nhs.uk/Id/nhs-number"/>
+			<value value="11112222"/>
+	</identifier>
+	<name>
+		<use value="official"/>
+		<family value="DAWKINS"/>
+		<given value="Jack"/>
+	</name>
+	<birthDate value="2017-10-02">
+		<extension url="http://hl7.org/fhir/StructureDefinition/patient-birthTime">
+			<valueDateTime value="2017-10-02T20:12:00+00:00"/>
+		</extension>
+	</birthDate>
+</Patient>
