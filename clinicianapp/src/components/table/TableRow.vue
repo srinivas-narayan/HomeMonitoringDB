@@ -18,6 +18,12 @@
                 patientData: this.patient
             }
         },
+        watch: {
+            patient(val) {
+                console.log(val)
+                this.patientData = val
+            }
+        },
         methods: {
             calculateWeightDiffToday() {
                 return this.patientData.weight_today - this.patientData.weight_yesterday
