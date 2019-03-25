@@ -16,24 +16,80 @@
                         </tr>
                     </thead>
                     <tbody class="nhsuk-table__body">
-                        <tr class="nhsuk-table__row">
-                        <td class="nhsuk-table__cell">Blisters on lips or around the mouth</td>
-                        <td class="nhsuk-table__cell ">cold sores</td>
-                        </tr>
-                        <tr class="nhsuk-table__row">
-                        <td class="nhsuk-table__cell">Itchy, dry, cracked, sore</td>
-                        <td class="nhsuk-table__cell ">eczema</td>
-                        </tr>
-                        <tr class="nhsuk-table__row">
-                        <td class="nhsuk-table__cell">Itchy blisters</td>
-                        <td class="nhsuk-table__cell ">shingles, chickenpox</td>
-                        </tr>
+                        <table-row v-for="patient in sortedData" :patient="patient"></table-row>
                     </tbody>
                 </table>
             </div>
+        </div>
+        <div class="nhsuk-grid-column-one-quarter">
+            <primary-button text="Refresh"></primary-button>
         </div>
     </div>
 </template>
 
 <script>
+    import PrimaryButton from '@/components/buttons/PrimaryButton.vue'
+    import TableRow from '@/components/TableRow.vue'
+    import axios from 'axios'
+
+    export default {
+        components: {
+            PrimaryButton,
+            TableRow
+        },
+        data() {
+            return {
+                fieldToSort: 'name',
+                tableData: [
+                    {
+                        name: 'test patient',
+                        diagnosis: 'something',
+                        weight_today: 2400,
+                        weight_yesterday: 2100,
+                        weight_three_days_ago: 2000,
+                        saturation: 80,
+                        feed: 100,
+                        nappy: 10
+                    },
+                    {
+                        name: 'test patient',
+                        diagnosis: 'something',
+                        weight_today: 2500,
+                        weight_yesterday: 2100,
+                        weight_three_days_ago: 2000,
+                        saturation: 80,
+                        feed: 100,
+                        nappy: 10
+                    },
+                    {
+                        name: 'test patient',
+                        diagnosis: 'something',
+                        weight_today: 2800,
+                        weight_yesterday: 2200,
+                        weight_three_days_ago: 2000,
+                        saturation: 80,
+                        feed: 100,
+                        nappy: 10
+                    }
+                ]
+            }
+        },
+        methods: {
+        },
+        computed: {
+            sortedData () {
+                function compare(a, b) {
+                    if (a[this.fieldToSort] < b[this.fieldToSort]) {
+                        return -1
+                    }
+                    if (a[this.fieldToSort] > b[this.fieldToSort]) {
+                        return 1
+                    }
+                    return 0
+                }
+
+                return this.tableData.sort(compare)
+            }
+        }
+    }
 </script>
