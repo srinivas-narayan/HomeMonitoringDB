@@ -7,7 +7,7 @@
         <td class="nhsuk-table__cell" v-html="calculateWeightDiffThree(patientData.weight)"></td>  
         <td class="nhsuk-table__cell" v-html="mostRecentSat(patientData.saturation)"></td> 
         <td class="nhsuk-table__cell" v-html="calculateOneDayAgo(patientData.feed)"></td> 
-        <td class="nhsuk-table__cell" v-html="mostRecent(patientData.nappy)"></td>
+        <td class="nhsuk-table__cell" v-html="nappyCount(patientData.nappy)"></td>
     </tr>
 </template>
 
@@ -122,10 +122,40 @@
                 var target = 100
                 var toReturn = `${total}<br>
                         <font size="2pt">
-                        Target: 100
+                        Target: 100<br>
+                        Updated: ${this.formatDate(mostRecent.updated)}
                         </font>`
 
-                if (parseFloat(field.quantity.value) < target) {
+                if (total < target) {
+                    return this.addRed(toReturn)
+                }
+                return toReturn
+            },
+            nappyCount(fields) {
+                var total = 0
+                var diarrheaCount = 0
+                var wetCount = 0
+                var mostRecent = this.calculateMostRecent(fields)
+                var oneDayAgo = Date.parse(mostRecent.updated.slice(0,25)) - 86400000
+                for (var field of fields) {
+                    var updated = this.parseDate(field.updated)
+                    var value = field.quantity.value
+                    if (updated >= oneDayAgo) {
+                        total += 1
+                        if (value === 'Diarrhea') {
+                            diarrheaCount += 1
+                        }
+                        else if (value == 'Wet') {
+                            wetCount += 1
+                        }
+                    }
+                }
+                var toReturn = `${total}<br>
+                        <font size="2pt">
+                        Updated: ${this.formatDate(mostRecent.updated)}
+                        </font>`
+
+                if (diarrheaCount > 0 || wetCount < 1) {
                     return this.addRed(toReturn)
                 }
                 return toReturn
