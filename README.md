@@ -1,1 +1,3 @@
 # HomeMonitoringDB
+
+This is an example of using open source NHS technologies to desing an centralised patient health record, which can be accessed by the patient, primary care personnel and tertiary care personnel, supporting decision making for better patient care. It helps reduce the use of healthcare resources by preventing patients becoming seriously ill needing care and admission in hospitals.
