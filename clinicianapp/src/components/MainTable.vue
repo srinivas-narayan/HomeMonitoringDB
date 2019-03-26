@@ -1,7 +1,7 @@
 <template>
     <div class="nhsuk-grid-row">
         <div class="nhsuk-grid-column-one-quarter">
-            <primary-button text="Refresh" @click="test()"></primary-button>
+            <primary-button text="Refresh" @click="getPatientData()"></primary-button>
         </div>
         <div class="nhsuk-grid-column-one-quarter">
             <text-input title="Search Name" v-model="filter"></text-input>
@@ -25,6 +25,8 @@
     import TableHeader from '@/components/table/TableHeader.vue'
     import TableRow from '@/components/table/TableRow.vue'
     import TextInput from '@/components/inputs/TextInput.vue'
+    import tableHeader from '@/assets/js/table-header.js'
+    import ApiConnector from '@/mixins/api-connector.js'
     import axios from 'axios'
 
     export default {
@@ -34,81 +36,112 @@
             TableHeader,
             TextInput
         },
+        mixins: [ ApiConnector ],
         data() {
             return {
                 filter: '',
-                tableHeader: [
-                    {
-                        name: 'Name',
-                        field: 'name'
-                    },
-                    {
-                        name: 'Diagnosis',
-                        field: 'diagnosis'
-                    },
-                    {
-                        name: 'Weight',
-                        field: 'weight_today'
-                    },
-                    {
-                        name: 'Weight Gain/Loss',
-                        field: 'name'
-                    },
-                    {
-                        name: 'Saturation',
-                        field: 'saturation'
-                    },
-                    {
-                        name: 'Feed',
-                        field: 'feed'
-                    },
-                    {
-                        name: 'Nappy',
-                        field: 'nappy'
-                    }
-                ],
+                patients: ['1695511', '1697315', '1697318', '1697321'],
+                tableHeader: tableHeader,
                 fieldToSort: 'name',
-                tableData: [
-                    {
-                        name: 'John Smith',
-                        diagnosis: 'ls',
-                        weight_today: 2400,
-                        weight_yesterday: 2100,
-                        weight_three_days_ago: 2000,
-                        saturation: 40,
-                        feed: 100,
-                        nappy: 10
-                    },
-                    {
-                        name: 'Adam Test',
-                        diagnosis: 'google',
-                        weight_today: 2500,
-                        weight_yesterday: 2100,
-                        weight_three_days_ago: 2000,
-                        saturation: 80,
-                        feed: 100,
-                        nappy: 10
-                    },
-                    {
-                        name: 'Henry Ford',
-                        diagnosis: 'something',
-                        weight_today: 2800,
-                        weight_yesterday: 2200,
-                        weight_three_days_ago: 2000,
-                        saturation: 70,
-                        feed: 100,
-                        nappy: 10
-                    }
-                ]
+                tableData: []
             }
         },
         methods: {
             changeSortField(field) {
                 this.fieldToSort = field
             },
-            test() {
-                console.log('test')
-            }            
+            getPid(resource) {
+                var reference = resource.subject.reference
+                return reference.split('/')[1]
+            },
+            getPatientName(data) {
+                var name = data.name[0]
+                return `${name.given[0]} ${name.family}`
+            },
+            getKey(code) {
+                if (code.system === 'http://hapi.fhir.org/baseDstu3/CodeSystem/NHSHMP-FeedType-1') {
+                    return 'feed'
+                }
+                else if (code.system === 'http://hapi.fhir.org/baseDstu3/CodeSystem/NHSHMP-Nappy-1') {
+                    return 'nappy'
+                }
+                else if (code.code === '27113001') {
+                    return 'weight' 
+                }
+                else if (code.code === '103228002') {
+                    return 'saturation'
+                }
+                else {
+                    return null
+                }
+            },
+            getPatientData() {
+                var demoQueries = []
+                var obsQueries = []
+                var patients = {}
+                this.tableData = []
+                for (var id of this.patients) {
+                    demoQueries.push(this.getDemographics(id))
+                    obsQueries.push(this.getObs(id))
+                }
+                axios.all(demoQueries)
+                .then((res) => {
+                    for (var patient of res) {
+                        var data = patient.data
+                        if (!(data.id in patients)) {
+                            patients[data.id] = {
+                                name: this.getPatientName(data)
+                            }
+                        }
+                    }
+                    return axios.all(obsQueries)
+                })
+                .then((res) => {
+                    for (var observation of res) {
+                        console.log(observation)
+                        if (observation.data.entry) {
+                            for (var entry of observation.data.entry) {
+                                var resource = entry.resource
+                                var pid = this.getPid(resource)
+                                var codes = resource.code.coding
+                                for (var code of codes) {
+                                    var key = this.getKey(code)
+
+                                    if (key === 'nappy') {
+                                        var item = {
+                                            updated: resource.issued,
+                                            quantity: {
+                                                value: resource.code.text
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        var item = {
+                                            updated: resource.issued,
+                                            quantity: resource.valueQuantity
+                                        }
+                                    }
+
+                                    if (!patients[pid][key]) {
+                                        patients[pid][key] = []
+                                        patients[pid][key].push(item)
+                                    }
+                                    else {
+                                        patients[pid][key].push(item)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    console.log(patients)
+                    for (var key in patients) {
+                        this.tableData.push(patients[key])
+                    }
+                })
+                .catch((e) => {
+                    console.log(e)
+                })
+            }
         },
         computed: {
             filterData() {
